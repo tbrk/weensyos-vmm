@@ -57,12 +57,6 @@ typedef struct physical_pageinfo {
 
 static physical_pageinfo pageinfo[PAGENUMBER(MEMSIZE_PHYSICAL)];
 
-typedef enum pageowner {
-    PO_FREE = 0,                // this page is free
-    PO_RESERVED = -1,           // this page is reserved memory
-    PO_KERNEL = -2              // this page is used by the kernel
-} pageowner_t;
-
 static void pageinfo_init(void);
 
 
