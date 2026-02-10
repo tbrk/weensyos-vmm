@@ -22,7 +22,7 @@ void process_main(void) {
         assert(p1 == 0 || p2 == 0);
     }
 
-    // The rest of this code is like p-allocator.c.
+    // The rest of this code is like p-main1.c.
 
     pid_t p = sys_getpid();
     srand(p);

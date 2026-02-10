@@ -49,7 +49,7 @@ more fundamental issues. Here is an overview of the code.
 
 *   `kernel.c`: The kernel. Uses functions declared and described in
     `kernel.h` and `lib.h`.
-*   `p-allocator.c`, `p-fork.c`, and `p-forkexit.c`: The applications.
+*   `p-main1.c`, `p-fork.c`, and `p-forkexit.c`: The applications.
     Uses functions declared and described in `process.h` and `lib.h`.
 
 === Support code ===
@@ -91,7 +91,7 @@ look at and puts them in the `obj/` directory.
     This smaller file just lists all the kernel's symbols (i.e.,
     variable names).
 
-*   `obj/p-allocator.asm`, `obj/p-allocator.sym`, ...
+*   `obj/p-main1.asm`, `obj/p-main1.sym`, ...
 
     Similar files are generated for process code.
 

@@ -9,14 +9,14 @@
 
 #define SECTORSIZE              512
 
-extern uint8_t _binary_obj_p_allocator_start[];
-extern uint8_t _binary_obj_p_allocator_end[];
-extern uint8_t _binary_obj_p_allocator2_start[];
-extern uint8_t _binary_obj_p_allocator2_end[];
-extern uint8_t _binary_obj_p_allocator3_start[];
-extern uint8_t _binary_obj_p_allocator3_end[];
-extern uint8_t _binary_obj_p_allocator4_start[];
-extern uint8_t _binary_obj_p_allocator4_end[];
+extern uint8_t _binary_obj_p_main1_start[];
+extern uint8_t _binary_obj_p_main1_end[];
+extern uint8_t _binary_obj_p_main2_start[];
+extern uint8_t _binary_obj_p_main2_end[];
+extern uint8_t _binary_obj_p_main3_start[];
+extern uint8_t _binary_obj_p_main3_end[];
+extern uint8_t _binary_obj_p_main4_start[];
+extern uint8_t _binary_obj_p_main4_end[];
 extern uint8_t _binary_obj_p_fork_start[];
 extern uint8_t _binary_obj_p_fork_end[];
 extern uint8_t _binary_obj_p_forkexit_start[];
@@ -26,10 +26,10 @@ struct ramimage {
     void* begin;
     void* end;
 } ramimages[] = {
-    { _binary_obj_p_allocator_start, _binary_obj_p_allocator_end },
-    { _binary_obj_p_allocator2_start, _binary_obj_p_allocator2_end },
-    { _binary_obj_p_allocator3_start, _binary_obj_p_allocator3_end },
-    { _binary_obj_p_allocator4_start, _binary_obj_p_allocator4_end },
+    { _binary_obj_p_main1_start, _binary_obj_p_main1_end },
+    { _binary_obj_p_main2_start, _binary_obj_p_main2_end },
+    { _binary_obj_p_main3_start, _binary_obj_p_main3_end },
+    { _binary_obj_p_main4_start, _binary_obj_p_main4_end },
     { _binary_obj_p_fork_start, _binary_obj_p_fork_end },
     { _binary_obj_p_forkexit_start, _binary_obj_p_forkexit_end }
 };
@@ -40,8 +40,8 @@ static int program_load_segment(proc* p, const elf_program* ph,
 
 // program_load(p, programnumber)
 //    Load the code corresponding to program `programnumber` into the process
-//    `p` and set `p->p_registers.reg_rip` to its entry point. Calls
-//    `assign_physical_page` to as required. Returns 0 on success and
+//    `p` and set `p->p_registers.reg_rip` to its entry point.
+//    Returns 0 on success and
 //    -1 on failure (e.g. out-of-memory). `allocator` is passed to
 //    `virtual_memory_map`.
 
@@ -74,8 +74,8 @@ int program_load(proc* p, int programnumber,
 //    Load an ELF segment at virtual address `ph->p_va` in process `p`. Copies
 //    `[src, src + ph->p_filesz)` to `dst`, then clears
 //    `[ph->p_va + ph->p_filesz, ph->p_va + ph->p_memsz)` to 0.
-//    Calls `assign_physical_page` to allocate pages and `virtual_memory_map`
-//    to map them in `p->p_pagetable`. Returns 0 on success and -1 on failure.
+//    Calls `virtual_memory_map` to map pages in `p->p_pagetable`.
+//    Returns 0 on success and -1 on failure.
 
 static int program_load_segment(proc* p, const elf_program* ph,
                                 const uint8_t* src,
@@ -86,8 +86,7 @@ static int program_load_segment(proc* p, const elf_program* ph,
 
     // allocate memory
     for (uintptr_t addr = va; addr < end_mem; addr += PAGESIZE) {
-        if (assign_physical_page(addr, p->p_pid) < 0
-            || virtual_memory_map(p->p_pagetable, addr, addr, PAGESIZE,
+        if ( virtual_memory_map(p->p_pagetable, addr, addr, PAGESIZE,
                                   PTE_P | PTE_W | PTE_U, allocator) < 0) {
             console_printf(CPOS(22, 0), 0xC000, "program_load_segment(pid %d): can't assign address %p\n", p->p_pid, addr);
             return -1;

@@ -47,13 +47,14 @@ KERNEL_OBJS = $(OBJDIR)/k-exception.o $(OBJDIR)/kernel.o \
 	$(OBJDIR)/k-hardware.o $(OBJDIR)/k-loader.o $(OBJDIR)/lib.o
 KERNEL_LINKER_FILES = link/kernel.ld link/shared.ld
 
-PROCESS_BINARIES = $(OBJDIR)/p-allocator $(OBJDIR)/p-allocator2 \
-	$(OBJDIR)/p-allocator3 $(OBJDIR)/p-allocator4 \
-	$(OBJDIR)/p-fork $(OBJDIR)/p-forkexit
+PROCESS_BINARIES = $(OBJDIR)/p-main1 $(OBJDIR)/p-main2 \
+		   $(OBJDIR)/p-main3 $(OBJDIR)/p-main4 \
+		   $(OBJDIR)/p-fork $(OBJDIR)/p-forkexit
 PROCESS_LIB_OBJS = $(OBJDIR)/lib.o $(OBJDIR)/process.o
-ALLOCATOR_OBJS = $(OBJDIR)/p-allocator.o $(PROCESS_LIB_OBJS)
-PROCESS_OBJS = $(OBJDIR)/p-allocator.o $(OBJDIR)/p-fork.o \
-	$(OBJDIR)/p-forkexit.o $(PROCESS_LIB_OBJS)
+PROCESS_OBJS = $(OBJDIR)/p-main1.o $(OBJDIR)/p-main2.o \
+	       $(OBJDIR)/p-main3.o $(OBJDIR)/p-main4.o \
+	       $(OBJDIR)/p-fork.o $(OBJDIR)/p-forkexit.o \
+	       $(PROCESS_LIB_OBJS)
 PROCESS_LINKER_FILES = link/process1.ld link/shared.ld
 
 
@@ -77,11 +78,14 @@ $(OBJDIR)/%.o: %.S $(BUILDSTAMPS)
 $(OBJDIR)/kernel.full: $(KERNEL_OBJS) $(PROCESS_BINARIES) $(KERNEL_LINKER_FILES)
 	$(call link,-T $(KERNEL_LINKER_FILES) -o $@ $(KERNEL_OBJS) -b binary $(PROCESS_BINARIES),LINK)
 
-$(OBJDIR)/p-%.full: $(OBJDIR)/p-%.o $(PROCESS_LIB_OBJS) $(PROCESS_LINKER_FILES)
+$(OBJDIR)/p-main%.full: $(OBJDIR)/p-main%.o $(PROCESS_LIB_OBJS) link/process%.ld link/shared.ld
+	$(call link,-T link/process$*.ld link/shared.ld -o $@ $(OBJDIR)/p-main$*.o $(PROCESS_LIB_OBJS),LINK)
+
+$(OBJDIR)/p-fork.full: $(OBJDIR)/p-fork.o $(PROCESS_LIB_OBJS) $(PROCESS_LINKER_FILES)
 	$(call link,-T $(PROCESS_LINKER_FILES) -o $@ $< $(PROCESS_LIB_OBJS),LINK)
 
-$(OBJDIR)/p-allocator%.full: $(ALLOCATOR_OBJS) link/process%.ld link/shared.ld
-	$(call link,-T link/process$*.ld link/shared.ld -o $@ $(ALLOCATOR_OBJS),LINK)
+$(OBJDIR)/p-forkexit.full: $(OBJDIR)/p-forkexit.o $(PROCESS_LIB_OBJS) $(PROCESS_LINKER_FILES)
+	$(call link,-T $(PROCESS_LINKER_FILES) -o $@ $< $(PROCESS_LIB_OBJS),LINK)
 
 $(OBJDIR)/%: $(OBJDIR)/%.full
 	$(call run,$(OBJDUMP) -S $< >$@.asm)

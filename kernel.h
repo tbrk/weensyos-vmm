@@ -107,12 +107,6 @@ typedef struct vamapping {
 
 vamapping virtual_memory_lookup(x86_64_pagetable* pagetable, uintptr_t va);
 
-// assign_physical_page(addr, owner)
-//    Assigns the page with physical address `addr` to the given owner.
-//    Fails if physical page `addr` was already allocated. Returns 0 on
-//    success and -1 on failure. Used by the program loader.
-int assign_physical_page(uintptr_t addr, int8_t owner);
-
 // physical_memory_isreserved(pa)
 //    Returns non-zero iff `pa` is a reserved physical address.
 int physical_memory_isreserved(uintptr_t pa);
