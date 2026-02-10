@@ -54,7 +54,7 @@ PROCESS_LIB_OBJS = $(OBJDIR)/lib.o $(OBJDIR)/process.o
 ALLOCATOR_OBJS = $(OBJDIR)/p-allocator.o $(PROCESS_LIB_OBJS)
 PROCESS_OBJS = $(OBJDIR)/p-allocator.o $(OBJDIR)/p-fork.o \
 	$(OBJDIR)/p-forkexit.o $(PROCESS_LIB_OBJS)
-PROCESS_LINKER_FILES = link/process.ld link/shared.ld
+PROCESS_LINKER_FILES = link/process1.ld link/shared.ld
 
 
 # Generic rules for making object files
@@ -80,8 +80,8 @@ $(OBJDIR)/kernel.full: $(KERNEL_OBJS) $(PROCESS_BINARIES) $(KERNEL_LINKER_FILES)
 $(OBJDIR)/p-%.full: $(OBJDIR)/p-%.o $(PROCESS_LIB_OBJS) $(PROCESS_LINKER_FILES)
 	$(call link,-T $(PROCESS_LINKER_FILES) -o $@ $< $(PROCESS_LIB_OBJS),LINK)
 
-$(OBJDIR)/p-allocator%.full: $(ALLOCATOR_OBJS) link/p-allocator%.ld link/shared.ld
-	$(call link,-T link/p-allocator$*.ld link/shared.ld -o $@ $(ALLOCATOR_OBJS),LINK)
+$(OBJDIR)/p-allocator%.full: $(ALLOCATOR_OBJS) link/process%.ld link/shared.ld
+	$(call link,-T link/process$*.ld link/shared.ld -o $@ $(ALLOCATOR_OBJS),LINK)
 
 $(OBJDIR)/%: $(OBJDIR)/%.full
 	$(call run,$(OBJDUMP) -S $< >$@.asm)
