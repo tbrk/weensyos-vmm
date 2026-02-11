@@ -1,4 +1,5 @@
 #include "x86-64.h"
+
 #include "elf.h"
 
 // boot.c
@@ -23,89 +24,85 @@
 //   The main kernel is stored as an ELF executable image starting in the
 //   disk's sector 1.
 
-#define SECTORSIZE      512
-#define ELFHDR          ((elf_header*) 0x10000) // scratch space
+#define SECTORSIZE 512
+#define ELFHDR ((elf_header *)0x10000) // scratch space
 
 void boot(void) __attribute__((noreturn));
 static void boot_readsect(uintptr_t dst, uint32_t src_sect);
-static void boot_readseg(uintptr_t dst, uint32_t src_sect,
-                         size_t filesz, size_t memsz);
-
+static void boot_readseg(uintptr_t dst, uint32_t src_sect, size_t filesz,
+                         size_t memsz);
 
 // boot
 //    Load the kernel and jump to it.
 void boot(void) {
-    // read 1st page off disk (should include programs as well as header)
-    // and check validity
-    boot_readseg((uintptr_t) ELFHDR, 1, PAGESIZE, PAGESIZE);
-    while (ELFHDR->e_magic != ELF_MAGIC) {
-        /* do nothing */
-    }
+  // read 1st page off disk (should include programs as well as header)
+  // and check validity
+  boot_readseg((uintptr_t)ELFHDR, 1, PAGESIZE, PAGESIZE);
+  while (ELFHDR->e_magic != ELF_MAGIC) {
+    /* do nothing */
+  }
 
-    // load each program segment
-    elf_program* ph = (elf_program*) ((uint8_t*) ELFHDR + ELFHDR->e_phoff);
-    elf_program* eph = ph + ELFHDR->e_phnum;
-    for (; ph < eph; ++ph) {
-        boot_readseg(ph->p_va, ph->p_offset / SECTORSIZE + 1,
-                     ph->p_filesz, ph->p_memsz);
-    }
+  // load each program segment
+  elf_program *ph = (elf_program *)((uint8_t *)ELFHDR + ELFHDR->e_phoff);
+  elf_program *eph = ph + ELFHDR->e_phnum;
+  for (; ph < eph; ++ph) {
+    boot_readseg(ph->p_va, ph->p_offset / SECTORSIZE + 1, ph->p_filesz,
+                 ph->p_memsz);
+  }
 
-    // jump to the kernel
-    typedef void (*kernel_entry_t)(void) __attribute__((noreturn));
-    kernel_entry_t kernel_entry = (kernel_entry_t) ELFHDR->e_entry;
-    kernel_entry();
+  // jump to the kernel
+  typedef void (*kernel_entry_t)(void) __attribute__((noreturn));
+  kernel_entry_t kernel_entry = (kernel_entry_t)ELFHDR->e_entry;
+  kernel_entry();
 }
-
 
 // boot_readseg(dst, src_sect, filesz, memsz)
 //    Load an ELF segment at virtual address `dst` from the IDE disk's sector
 //    `src_sect`. Copies `filesz` bytes into memory at `dst` from sectors
 //    `src_sect` and up, then clears memory in the range
 //    `[dst+filesz, dst+memsz)`.
-static void boot_readseg(uintptr_t ptr, uint32_t src_sect,
-                         size_t filesz, size_t memsz) {
-    uintptr_t end_ptr = ptr + filesz;
-    memsz += ptr;
+static void boot_readseg(uintptr_t ptr, uint32_t src_sect, size_t filesz,
+                         size_t memsz) {
+  uintptr_t end_ptr = ptr + filesz;
+  memsz += ptr;
 
-    // round down to sector boundary
-    ptr &= ~(SECTORSIZE - 1);
+  // round down to sector boundary
+  ptr &= ~(SECTORSIZE - 1);
 
-    // read sectors
-    for (; ptr < end_ptr; ptr += SECTORSIZE, ++src_sect) {
-        boot_readsect(ptr, src_sect);
-    }
+  // read sectors
+  for (; ptr < end_ptr; ptr += SECTORSIZE, ++src_sect) {
+    boot_readsect(ptr, src_sect);
+  }
 
-    // clear bss segment
-    for (; end_ptr < memsz; ++end_ptr) {
-        *(uint8_t*) end_ptr = 0;
-    }
+  // clear bss segment
+  for (; end_ptr < memsz; ++end_ptr) {
+    *(uint8_t *)end_ptr = 0;
+  }
 }
-
 
 // boot_waitdisk
 //    Wait for the disk to be ready.
 static void boot_waitdisk(void) {
-    // Wait until the ATA status register says ready (0x40 is on)
-    // & not busy (0x80 is off)
-    while ((inb(0x1F7) & 0xC0) != 0x40) {
-        /* do nothing */
-    }
+  // Wait until the ATA status register says ready (0x40 is on)
+  // & not busy (0x80 is off)
+  while ((inb(0x1F7) & 0xC0) != 0x40) {
+    /* do nothing */
+  }
 }
-
 
 // boot_readsect(dst, src_sect)
 //    Read disk sector number `src_sect` into address `dst`.
 static void boot_readsect(uintptr_t dst, uint32_t src_sect) {
-    // programmed I/O for "read sector"
-    boot_waitdisk();
-    outb(0x1F2, 1);             // send `count = 1` as an ATA argument
-    outb(0x1F3, src_sect);      // send `src_sect`, the sector number
-    outb(0x1F4, src_sect >> 8);
-    outb(0x1F5, src_sect >> 16);
-    outb(0x1F6, (src_sect >> 24) | 0xE0);
-    outb(0x1F7, 0x20);          // send the command: 0x20 = read sectors
+  // programmed I/O for "read sector"
+  boot_waitdisk();
+  outb(0x1F2, 1);        // send `count = 1` as an ATA argument
+  outb(0x1F3, src_sect); // send `src_sect`, the sector number
+  outb(0x1F4, src_sect >> 8);
+  outb(0x1F5, src_sect >> 16);
+  outb(0x1F6, (src_sect >> 24) | 0xE0);
+  outb(0x1F7, 0x20); // send the command: 0x20 = read sectors
 
-    // then move the data into memory
-    boot_waitdisk();
-    insl(0x1F0, (void*) dst, SECTORSIZE/4); // read 128 words from the disk
+  // then move the data into memory
+  boot_waitdisk();
+  insl(0x1F0, (void *)dst, SECTORSIZE / 4); // read 128 words from the disk
 }

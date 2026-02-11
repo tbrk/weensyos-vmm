@@ -13,9 +13,9 @@ compile = $(CC) $(CPPFLAGS) $(CFLAGS) $(DEPCFLAGS) $(1)
 link = $(LD) $(LDFLAGS) $(1)
 run = $(1) $(3)
 else
-compile = @/bin/echo " " $(2) $< && $(CC) $(CPPFLAGS) $(CFLAGS) $(DEPCFLAGS) $(1)
-link = @/bin/echo " " $(2) $(patsubst %.full,%,$@) && $(LD) $(LDFLAGS) $(1)
-run = @$(if $(2),/bin/echo " " $(2) $(3) &&,) $(1) $(3)
+compile = @/usr/bin/env echo " " $(2) $< && $(CC) $(CPPFLAGS) $(CFLAGS) $(DEPCFLAGS) $(1)
+link = @/usr/bin/env echo " " $(2) $(patsubst %.full,%,$@) && $(LD) $(LDFLAGS) $(1)
+run = @$(if $(2),/usr/bin/env echo " " $(2) $(3) &&,) $(1) $(3)
 endif
 
 # `$(D)` controls how QEMU responds to faults. Run `make D=1 run` to

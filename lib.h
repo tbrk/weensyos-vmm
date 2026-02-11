@@ -8,10 +8,9 @@
 //
 //    Contents: (1) C library subset, (2) system call numbers, (3) console.
 
-
 // C library subset
 
-#define NULL ((void*) 0)
+#define NULL ((void *)0)
 
 typedef __builtin_va_list va_list;
 #define va_start(val, last) __builtin_va_start(val, last)
@@ -27,89 +26,98 @@ typedef unsigned int uint32_t;
 typedef long int64_t;
 typedef unsigned long uint64_t;
 
-typedef long intptr_t;                // ints big enough to hold pointers
+typedef long intptr_t; // ints big enough to hold pointers
 typedef unsigned long uintptr_t;
 
-typedef unsigned long size_t;         // sizes and offsets
+typedef unsigned long size_t; // sizes and offsets
 typedef long ssize_t;
 typedef long off_t;
 
-typedef int pid_t;                    // process IDs
+typedef int pid_t; // process IDs
 
-void* memcpy(void* dst, const void* src, size_t n);
-void* memmove(void* dst, const void* src, size_t n);
-void* memset(void* s, int c, size_t n);
-size_t strlen(const char* s);
-size_t strnlen(const char* s, size_t maxlen);
-char* strcpy(char* dst, const char* src);
-int strcmp(const char* a, const char* b);
-char* strchr(const char* s, int c);
-int snprintf(char* s, size_t size, const char* format, ...);
-int vsnprintf(char* s, size_t size, const char* format, va_list val);
+void *memcpy(void *dst, const void *src, size_t n);
+void *memmove(void *dst, const void *src, size_t n);
+void *memset(void *s, int c, size_t n);
+size_t strlen(const char *s);
+size_t strnlen(const char *s, size_t maxlen);
+char *strcpy(char *dst, const char *src);
+int strcmp(const char *a, const char *b);
+char *strchr(const char *s, int c);
+int snprintf(char *s, size_t size, const char *format, ...);
+int vsnprintf(char *s, size_t size, const char *format, va_list val);
 
 #define RAND_MAX 0x7FFFFFFF
 int rand(void);
 void srand(unsigned seed);
 
 // Return the offset of `member` relative to the beginning of a struct type
-#define offsetof(type, member)  ((size_t) (&((type*) 0)->member))
+#define offsetof(type, member) ((size_t)(&((type *)0)->member))
 
 // Return the number of elements in an array
-#define arraysize(array)  (sizeof(array) / sizeof(array[0]))
-
+#define arraysize(array) (sizeof(array) / sizeof(array[0]))
 
 // Assertions
 
 // assert(x)
 //    If `x == 0`, print a message and fail.
-#define assert(x) \
-        do { if (!(x)) assert_fail(__FILE__, __LINE__, #x); } while (0)
-void assert_fail(const char* file, int line, const char* msg)
+#define assert(x)                                                              \
+  do {                                                                         \
+    if (!(x))                                                                  \
+      assert_fail(__FILE__, __LINE__, #x);                                     \
+  } while (0)
+void assert_fail(const char *file, int line, const char *msg)
     __attribute__((noinline, noreturn));
 
 // panic(format, ...)
 //    Print the message determined by `format` and fail.
-void panic(const char* format, ...) __attribute__((noinline, noreturn));
-
+void panic(const char *format, ...) __attribute__((noinline, noreturn));
 
 // Min, max, and rounding operations
 
-#define MIN(_a, _b) ({                                          \
-            typeof(_a) __a = (_a); typeof(_b) __b = (_b);       \
-            __a <= __b ? __a : __b; })
-#define MAX(_a, _b) ({                                          \
-            typeof(_a) __a = (_a); typeof(_b) __b = (_b);       \
-            __a >= __b ? __a : __b; })
+#define MIN(_a, _b)                                                            \
+  ({                                                                           \
+    typeof(_a) __a = (_a);                                                     \
+    typeof(_b) __b = (_b);                                                     \
+    __a <= __b ? __a : __b;                                                    \
+  })
+#define MAX(_a, _b)                                                            \
+  ({                                                                           \
+    typeof(_a) __a = (_a);                                                     \
+    typeof(_b) __b = (_b);                                                     \
+    __a >= __b ? __a : __b;                                                    \
+  })
 
 // Round down to the nearest multiple of n
-#define ROUNDDOWN(a, n) ({                                      \
-        uint64_t __a = (uint64_t) (a);                          \
-        (typeof(a)) (__a - __a % (n)); })
+#define ROUNDDOWN(a, n)                                                        \
+  ({                                                                           \
+    uint64_t __a = (uint64_t)(a);                                              \
+    (typeof(a))(__a - __a % (n));                                              \
+  })
 // Round up to the nearest multiple of n
-#define ROUNDUP(a, n) ({                                        \
-        uint64_t __n = (uint64_t) (n);                          \
-        (typeof(a)) (ROUNDDOWN((uint64_t) (a) + __n - 1, __n)); })
-
+#define ROUNDUP(a, n)                                                          \
+  ({                                                                           \
+    uint64_t __n = (uint64_t)(n);                                              \
+    (typeof(a))(ROUNDDOWN((uint64_t)(a) + __n - 1, __n));                      \
+  })
 
 // System call numbers: an application calls `int NUM` to call a system call
 
-#define INT_SYS                 48
-#define INT_SYS_PANIC           (INT_SYS + 0)
-#define INT_SYS_GETPID          (INT_SYS + 1)
-#define INT_SYS_YIELD           (INT_SYS + 2)
-#define INT_SYS_PAGE_ALLOC      (INT_SYS + 3)
-#define INT_SYS_FORK            (INT_SYS + 4)
-#define INT_SYS_EXIT            (INT_SYS + 5)
-
+#define INT_SYS 48
+#define INT_SYS_PANIC (INT_SYS + 0)
+#define INT_SYS_GETPID (INT_SYS + 1)
+#define INT_SYS_YIELD (INT_SYS + 2)
+#define INT_SYS_PAGE_ALLOC (INT_SYS + 3)
+#define INT_SYS_FORK (INT_SYS + 4)
+#define INT_SYS_EXIT (INT_SYS + 5)
 
 // Console printing
 
-#define CPOS(row, col)  ((row) * 80 + (col))
-#define CROW(cpos)      ((cpos) / 80)
-#define CCOL(cpos)      ((cpos) % 80)
+#define CPOS(row, col) ((row) * 80 + (col))
+#define CROW(cpos) ((cpos) / 80)
+#define CCOL(cpos) ((cpos) % 80)
 
 #define CONSOLE_COLUMNS 80
-#define CONSOLE_ROWS    25
+#define CONSOLE_ROWS 25
 extern uint16_t console[CONSOLE_ROWS * CONSOLE_COLUMNS];
 
 // current position of the cursor (80 * ROW + COL)
@@ -136,22 +144,21 @@ void console_clear(void);
 //    being printed.  It takes an integer from the parameter list.
 //
 //    Returns the final position of the cursor.
-int console_printf(int cpos, int color, const char* format, ...)
+int console_printf(int cpos, int color, const char *format, ...)
     __attribute__((noinline));
 
 // console_vprintf(cpos, color, format val)
 //    The vprintf version of console_printf.
-int console_vprintf(int cpos, int color, const char* format, va_list val)
+int console_vprintf(int cpos, int color, const char *format, va_list val)
     __attribute__((noinline));
-
 
 // Generic print library
 
 typedef struct printer printer;
 struct printer {
-    void (*putc)(printer* p, unsigned char c, int color);
+  void (*putc)(printer *p, unsigned char c, int color);
 };
 
-void printer_vprintf(printer* p, int color, const char* format, va_list val);
+void printer_vprintf(printer *p, int color, const char *format, va_list val);
 
 #endif /* !WEENSYOS_LIB_H */
