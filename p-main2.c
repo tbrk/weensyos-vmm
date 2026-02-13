@@ -23,7 +23,7 @@ void process_main(void) {
   int init = 1;
   int i = 0;
   while (1) {
-    console[CPOS(0, 71)] = '0' + i;
+    console[CPOS(0, 71)] = ('0' + i) | (0x05 << 8);
     if (init) {
       app_printf(p, "%d: bonjour\n", p);
       init = 0;
