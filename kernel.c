@@ -62,6 +62,9 @@ static void pageinfo_init(void);
 
 // Memory functions
 
+static int animate_showing = 1;
+static int animate_pause = 0;
+
 void check_virtual_memory(void);
 void memshow_physical(void);
 void memshow_virtual(x86_64_pagetable* pagetable, const char* name);
@@ -207,8 +210,14 @@ void exception(x86_64_registers* reg) {
     }
 
     // If Control-C was typed, exit the virtual machine.
-    check_keyboard();
+    char c = check_keyboard();
 
+    if ('0' <= c && c <= '9') {
+	animate_showing = c - '0';
+	animate_pause = 1;
+    } else if (c == 'p') {
+	animate_pause = !animate_pause;
+    }
 
     // Actually handle the exception.
     switch (reg->reg_intno) {
@@ -527,24 +536,23 @@ void memshow_virtual(x86_64_pagetable* pagetable, const char* name) {
 
 void memshow_virtual_animate(void) {
     static unsigned last_ticks = 0;
-    static int showing = 1;
 
     // switch to a new process every 0.25 sec
-    if (last_ticks == 0 || ticks - last_ticks >= HZ / 2) {
+    if (!animate_pause && (last_ticks == 0 || ticks - last_ticks >= HZ / 2)) {
         last_ticks = ticks;
-        ++showing;
+        ++animate_showing;
     }
 
     // the current process may have died -- don't display it if so
-    while (showing <= 2*NPROC
-           && processes[showing % NPROC].p_state == P_FREE) {
-        ++showing;
+    while (animate_showing <= 2*NPROC
+           && processes[animate_showing % NPROC].p_state == P_FREE) {
+        ++animate_showing;
     }
-    showing = showing % NPROC;
+    animate_showing = animate_showing % NPROC;
 
-    if (processes[showing].p_state != P_FREE) {
+    if (processes[animate_showing].p_state != P_FREE) {
         char s[4];
-        snprintf(s, 4, "%d ", showing);
-        memshow_virtual(processes[showing].p_pagetable, s);
+        snprintf(s, 4, "%d ", animate_showing);
+        memshow_virtual(processes[animate_showing].p_pagetable, s);
     }
 }
