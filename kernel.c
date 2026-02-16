@@ -203,24 +203,31 @@ void exception(x86_64_registers* reg) {
     // Events logged this way are stored in the host's `log.txt` file.
     /*log_printf("proc %d: exception %d\n", current->p_pid, reg->reg_intno);*/
 
-    // Show the current cursor location and memory state
-    // (unless this is a kernel fault).
+    // Show the current cursor location
     console_show_cursor(cursorpos);
-    if (reg->reg_intno != INT_PAGEFAULT || (reg->reg_err & PFERR_USER)) {
-        check_virtual_memory();
-        memshow_physical();
-        memshow_virtual_animate();
-    }
 
     // If Control-C was typed, exit the virtual machine.
-    char c = check_keyboard();
+    int idling = 0;
+    do {
+	char c = check_keyboard();
 
-    if ('0' <= c && c <= '9') {
-	animate_showing = c - '0';
-	animate_pause = 1;
-    } else if (c == 'p') {
-	animate_pause = !animate_pause;
-    }
+	// Show the memory state and allow to idle here
+	// (unless this is a kernel fault).
+	if (reg->reg_intno != INT_PAGEFAULT || (reg->reg_err & PFERR_USER)) {
+	    check_virtual_memory();
+	    memshow_physical();
+	    memshow_virtual_animate();
+
+	    if ('0' <= c && c <= '9') {
+		animate_showing = c - '0';
+		animate_pause = 1;
+	    } else if (c == 'p') {
+		animate_pause = !animate_pause;
+	    } else if (c == 'i') {
+		idling = !idling;
+	    }
+	}
+    } while (idling);
 
     // Actually handle the exception.
     switch (reg->reg_intno) {
