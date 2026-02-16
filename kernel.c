@@ -191,6 +191,9 @@ int assign_physical_page(uintptr_t addr, int8_t owner) {
 //    Note that hardware interrupts are disabled whenever the kernel is running.
 
 void exception(x86_64_registers* reg) {
+
+    int reschedule = 0; 
+
     // Copy the saved registers into the `current` process descriptor
     // and always use the kernel's page table.
     current->p_registers = *reg;
@@ -231,7 +234,7 @@ void exception(x86_64_registers* reg) {
         break;
 
     case INT_SYS_YIELD:
-        schedule();
+	reschedule = 1;
         break;                  /* will not be reached */
 
     case INT_SYS_PAGE_ALLOC: {
@@ -247,7 +250,7 @@ void exception(x86_64_registers* reg) {
 
     case INT_TIMER:
         ++ticks;
-        schedule();
+	reschedule = 1;
         break;                  /* will not be reached */
 
     case INT_PAGEFAULT: {
@@ -277,7 +280,7 @@ void exception(x86_64_registers* reg) {
 
 
     // Return to the current process (or run something else).
-    if (current->p_state == P_RUNNABLE) {
+    if (!reschedule && current->p_state == P_RUNNABLE) {
         run(current);
     } else {
         schedule();
