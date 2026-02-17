@@ -71,7 +71,7 @@ typedef enum pageowner {
     PO_KERNEL = -2              // this page is used by the kernel
 } pageowner_t;
 
-extern uintptr_t page_alloc(pageowner_t owner);
+extern x86_64_pagetable* page_alloc(pageowner_t owner);
 
 // virtual_memory_map(pagetable, va, pa, sz, perm, allocator)
 //    Map virtual address range `[va, va+sz)` in `pagetable`.

@@ -110,7 +110,7 @@ void kernel(const char* command) {
     run(&processes[1]);
 }
 
-uintptr_t page_alloc(pageowner_t owner)
+x86_64_pagetable* page_alloc(pageowner_t owner)
 {
     static int pageno = 0;
     uintptr_t pt = (uintptr_t)NULL;
@@ -132,12 +132,12 @@ uintptr_t page_alloc(pageowner_t owner)
 	pageno = (pageno + 1) % PAGENUMBER(MEMSIZE_PHYSICAL);
     }
 
-    return pt;
+    return (x86_64_pagetable*)pt;
 }
 
 x86_64_pagetable* pagetable_alloc(void)
 {
-    return (x86_64_pagetable*)page_alloc(current->p_pid);
+    return page_alloc(current->p_pid);
 }
 
 // process_setup(pid, program_number)
