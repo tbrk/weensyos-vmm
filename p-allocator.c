@@ -9,6 +9,7 @@ uint8_t *heap_top;
 uint8_t *stack_bottom;
 
 void process_main(void) {
+  int first = 1;
   pid_t p = sys_getpid();
   srand(p);
 
@@ -33,10 +34,20 @@ void process_main(void) {
           ('0' + p) | (0x07 << 8);           /* check we can write to console */
       *heap_top = *(uint8_t *)(0x80000 - 4); /* read kernel stack /!\ */
 
+      // point to the next page (not yet mapped!) for the next iteration
       heap_top += PAGESIZE;
 
-      /* /!\ test page fault in process 2 */
-      // if (p == 2) app_printf(p, "%d:%x\n", p, *heap_top);
+      if (p == 2 && first) {
+	  uint8_t *process1_stack = (uint8_t *)(0x140000 - 8);
+	  uint8_t *unallocated_heap = heap_top;
+
+	  // The following memory reads are all illegal!
+	  // As the virtual memory mapping improves, they become impossible.
+	  app_printf(p, "%d: %p=0x%x %p=0x%x\n", p,
+			process1_stack, *process1_stack,
+			unallocated_heap, *unallocated_heap);
+	  first = 0;
+      }
     }
     sys_yield();
   }
