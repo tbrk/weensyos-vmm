@@ -1,0 +1,12 @@
+s/^x86_64-elf-//;
+s/-m[a-z0-9-][a-z0-9-]* *//g;
+s/-W[a-z0-9-]* *//g;
+s/-f[a-z0-9-]* *//g;
+s/-M[DP] *//g;
+s/-MF *[^ ]* *//g;
+s/-std=[a-z0-9]* *//g;
+s/  */ /g;
+/^mkdir /d;
+/^touch /d;
+/^nm /d;
+/^objdump /d;
