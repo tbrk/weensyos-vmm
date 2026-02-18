@@ -41,7 +41,7 @@ typedef struct proc {
 #define NPAGES (MEMSIZE_PHYSICAL / PAGESIZE)
 
 // Virtual memory size
-#define MEMSIZE_VIRTUAL 0x300000
+#define MEMSIZE_VIRTUAL 0x280000
 
 // Hardware interrupt numbers
 #define INT_HARDWARE 32

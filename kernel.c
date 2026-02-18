@@ -449,9 +449,16 @@ static const uint16_t memstate_colors[] = {
 
 void memshow_physical(void) {
   console_printf(CPOS(0, 32), 0x0F00, "PHYSICAL MEMORY");
+  for (int n = 0; n < 4; n++) {
+    int cpos = console_printf(CPOS(1, 12 + n * 0x10), 0x0F00, "0x%d0", n);
+    console_printf(cpos, 0x0700, "XXX");
+    console_printf(CPOS(2, 12 + n * 0x10), 0x0F00, "|");
+  }
   for (int pn = 0; pn < PAGENUMBER(MEMSIZE_PHYSICAL); ++pn) {
     if (pn % 64 == 0) {
-      console_printf(CPOS(1 + pn / 64, 3), 0x0F00, "0x%06X ", pn << 12);
+      int cpos =
+          console_printf(CPOS(3 + pn / 64, 3), 0x0F00, "0x%04X", pn << 4);
+      console_printf(cpos - 1, 0x0700, "XXX ");
     }
 
     int owner = pageinfo[pn].owner;
@@ -469,7 +476,7 @@ void memshow_physical(void) {
       color = 'S' | 0x0700;
     }
 
-    console[CPOS(1 + pn / 64, 12 + pn % 64)] = color;
+    console[CPOS(3 + pn / 64, 12 + pn % 64)] = color;
   }
 }
 
@@ -480,7 +487,12 @@ void memshow_physical(void) {
 void memshow_virtual(x86_64_pagetable *pagetable, const char *name) {
   assert((uintptr_t)pagetable == PTE_ADDR(pagetable));
 
-  console_printf(CPOS(10, 26), 0x0F00, "VIRTUAL ADDRESS SPACE FOR %s", name);
+  console_printf(CPOS(12, 26), 0x0F00, "VIRTUAL ADDRESS SPACE FOR %s", name);
+  for (int n = 0; n < 4; n++) {
+    int cpos = console_printf(CPOS(13, 12 + n * 0x10), 0x0F00, "0x%d0", n);
+    console_printf(cpos, 0x0700, "XXX");
+    console_printf(CPOS(14, 12 + n * 0x10), 0x0F00, "|");
+  }
   for (uintptr_t va = 0; va < MEMSIZE_VIRTUAL; va += PAGESIZE) {
     vamapping vam = virtual_memory_lookup(pagetable, va);
     uint16_t color;
@@ -509,9 +521,11 @@ void memshow_virtual(x86_64_pagetable *pagetable, const char *name) {
     }
     uint32_t pn = PAGENUMBER(va);
     if (pn % 64 == 0) {
-      console_printf(CPOS(11 + pn / 64, 3), 0x0F00, "0x%06X ", va);
+      int cpos =
+          console_printf(CPOS(15 + pn / 64, 3), 0x0F00, "0x%03X", va >> 12);
+      console_printf(cpos, 0x0700, "XXX ");
     }
-    console[CPOS(11 + pn / 64, 12 + pn % 64)] = color;
+    console[CPOS(15 + pn / 64, 12 + pn % 64)] = color;
   }
 }
 
