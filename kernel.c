@@ -137,17 +137,18 @@ x86_64_pagetable *pagetable_alloc(void) { return page_alloc(current->p_pid); }
 //    %rip and %rsp, gives it a stack page, and marks it as runnable.
 
 void process_setup(pid_t pid, int program_number) {
-  process_init(&processes[pid], 0);
-  processes[pid].p_pagetable = kernel_pagetable;
+  current = &processes[pid];
+  process_init(current, 0);
+  current->p_pagetable = kernel_pagetable;
   ++pageinfo[PAGENUMBER(kernel_pagetable)].refcount;
-  int r = program_load(&processes[pid], program_number, NULL);
+  int r = program_load(current, program_number, NULL);
   assert(r >= 0);
-  processes[pid].p_registers.reg_rsp = PROC_START_ADDR + PROC_SIZE * pid;
-  uintptr_t stack_page = processes[pid].p_registers.reg_rsp - PAGESIZE;
+  current->p_registers.reg_rsp = PROC_START_ADDR + PROC_SIZE * pid;
+  uintptr_t stack_page = current->p_registers.reg_rsp - PAGESIZE;
   assign_physical_page(stack_page, pid);
-  virtual_memory_map(processes[pid].p_pagetable, stack_page, stack_page,
-                     PAGESIZE, PTE_P | PTE_W | PTE_U, NULL);
-  processes[pid].p_state = P_RUNNABLE;
+  virtual_memory_map(current->p_pagetable, stack_page, stack_page, PAGESIZE,
+                     PTE_P | PTE_W | PTE_U, NULL);
+  current->p_state = P_RUNNABLE;
 }
 
 // assign_physical_page(addr, owner)
